@@ -2,10 +2,31 @@
 //  When implementing `Display`, you may want to use the `write!` macro from Rust's standard library.
 //  The docs for the `std::fmt` module are a good place to start and look for examples:
 //  https://doc.rust-lang.org/std/fmt/index.html#write
+use std::io::Write;
+use std::fmt::Display;
+use std::error::Error;
 
+#[derive(Debug)]
 enum TicketNewError {
     TitleError(String),
     DescriptionError(String),
+}
+impl Display for TicketNewError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            TicketNewError::TitleError(errorMessage) => write!(fmt, "{}", errorMessage),
+            TicketNewError::DescriptionError(errorMessage) => write!(fmt, "{}", errorMessage),
+        }
+    }
+}
+
+impl Error for TicketNewError {
+    fn description(&self) -> &str {
+        match self {
+            TicketNewError::TitleError(title) => title,
+            TicketNewError::DescriptionError(desc) => desc,
+        }
+    }
 }
 
 // TODO: `easy_ticket` should panic when the title is invalid, using the error message
@@ -13,7 +34,13 @@ enum TicketNewError {
 //   When the description is invalid, instead, it should use a default description:
 //   "Description not provided".
 fn easy_ticket(title: String, description: String, status: Status) -> Ticket {
-    todo!()
+    match Ticket::new(title.clone(), description, status.clone()) {
+        Ok(ticket) => ticket,
+        Err(TicketNewError::DescriptionError(err)) => Ticket::new(title,"Description not provided".into(),status).unwrap(),
+        Err(TicketNewError::TitleError(err)) => {
+            panic!("{}",err);
+        },
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
