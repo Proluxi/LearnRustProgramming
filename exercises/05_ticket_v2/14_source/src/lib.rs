@@ -15,6 +15,11 @@ mod status;
 
 #[derive(Debug, thiserror::Error)]
 pub enum TicketNewError {
+    #[error("`invalid` is not a valid status. Use one of: ToDo, InProgress, Done")]
+    StatusIsInvalid{
+    #[from]
+    inner: status::ParseStatusError
+    },
     #[error("Title cannot be empty")]
     TitleCannotBeEmpty,
     #[error("Title cannot be longer than 50 bytes")]
@@ -47,12 +52,13 @@ impl Ticket {
             return Err(TicketNewError::DescriptionTooLong);
         }
 
+        let w_status : Status = Status::try_from(status.clone())?;
         // TODO: Parse the status string into a `Status` enum.
 
         Ok(Ticket {
             title,
             description,
-            status,
+            status : w_status,
         })
     }
 }
